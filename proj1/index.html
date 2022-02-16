@@ -1,7 +1,126 @@
+﻿<!DOCTYPE html>
 <html>
-	<head>
-	</head>
-	<body>
-		Project 1 here
-	</body>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>184 Project 1</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body class="stackedit">
+  <div class="stackedit__html"><h1 id="cs-184-computer-graphics-and-imaging-spring-2022">Project 1: Rasterizer</h1>
+<h3 id="project-1-rasterizer">CS 184: Computer Graphics and Imaging, Spring 2022</h3>
+<h3 id="david-mcallister-and-james-dai">David McAllister and James Dai</h3>
+<h3 id="task-1">Task 1</h3>
+<p>In our naive solution, we rasterized triangles by first identifying the triangle’s bounding box, described by the triangle’s least and greatest x, y coordinates. We then iterated through this two-dimensional space and performed the point-in-triangle test outlined in lecture at each point. This approach narrows the sampling space from the screen space to the bounding box, but a lot more pruning is possible.</p>
+<p><img src="test4.png"><br>
+<em>basic/test4.svg</em> rasterized</p>
+<h4 id="extra-credit">Extra credit</h4>
+<p>We implemented a tiled rasterizing system to be able to fully include or disclude squares from the bounding box space being drawn. Squares that cannot be grouped into either category are point sampled as in the naive solution. To identify a square as fully within a triangle, it performs the point-in-triangle test for each vertex of the square. Identifying a square as fully outside a triangle is more complicated, however. It involves the following checks.</p>
+<ul>
+<li>No vertex of the square lies within the triangle (point-in-triangle test)</li>
+<li>No vertex of the triangle lies within the square</li>
+<li>No edges of the square or triangle intersect</li>
+</ul>
+<p>To efficiently test edges for intersection, we implemented a series of three-point clockwise checks as explained by <a href="https://blog.devgenius.io/clockwise-and-counterclockwise-line-segment-intersection-b3317839534e">https://blog.devgenius.io/clockwise-and-counterclockwise-line-segment-intersection-b3317839534e</a>.</p>
+<p>The second test is redundant with the last one. A further improvement would be to use a heuristic to check only a subset of edge pairs between the square and triangle, in which case the second test might be necessary. This extra computation didn’t seem to have a large impact on runtime, so we ignored it.</p>
+<p><img src="tiled.png"><br>
+<em>basic/test4.svg</em> rasterized to show fully included squares, point-sampled squares, and fully discluded squares.</p>
+<p>Raster times for the naive solution and the optimized tiled solution for different tile sizes measured in number of pixels. Results are averaged over 10 runs.</p>
+
+<table>
+<thead>
+<tr>
+<th>Rasterizer</th>
+<th>test4 (μs)</th>
+<th>test6 (μs)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Bounding box</td>
+<td>1391</td>
+<td>2213</td>
+</tr>
+<tr>
+<td>Tiled (8x8)</td>
+<td>1010</td>
+<td>1809</td>
+</tr>
+<tr>
+<td>Tiled (16x16)</td>
+<td>827</td>
+<td>1873</td>
+</tr>
+<tr>
+<td>Tiled (32x32)</td>
+<td>922</td>
+<td>2150</td>
+</tr>
+</tbody>
+</table><p>The 16x16 tiled approach rasterizes 37% faster  the bounding box approach for the simpler test4 and 19% faster for test6. This suggests that denser geometry experiences less of a performance benefit than larger, simpler triangles.</p>
+<h3 id="task-2">Task 2</h3>
+<ul>
+</ul>
+<p>Originally, instead of modifying the whole rasterization pipeline, the supersampling was isolated to the triangle rasterization step, not allocating any additional memory and instead averaging a set of <code>sqrt(sample_rate)</code> by <code>sqrt(sample_rate)</code> pixels on-the-fly. This approach had very little overhead, but it introduced artifacts when rasterizing adjacent triangles. Each triangle was sampling its contents as well as the background color at its edges, rather than sampling the adjacent triangle.</p>
+<p><img src="ss_artifacts.png"><br>
+Sample rate 1 <em>basic/test4.svg</em>.</p>
+<p>Our supersampling algorithm spaces sample points evenly at the centers of evenly placed subpixels. It performs the three line point-in-triangle test at each of these locations and places the sampled colors in the sample buffer array. This sample buffer array has its resolution scaled from <code>width * height</code> to <code>sample_rate * width * height</code>.</p>
+<p>This upscaled sample buffer array is then resolved into the framebuffer by averaging each square of <code>sqrt(sample_rate)</code> by <code>sqrt(sample_rate)</code> pixels and outputting the resulting color. It also works with tile-based rendering we completed for task1 extra credit!</p>
+<p>Introducing supersampling into our rasterization system essentially implements an averaging blur on a higher resolution output. This reduces high spatial frequencies and reduces aliasing and the resulting “jaggies.” This effect is particularly pronounced on skinny triangle edges, where sampling error can cause the triangle to appear patchy.</p>
+<p><img src="supersample1.png"><br>
+Sample rate 1 <em>basic/test4.svg</em>.</p>
+<p><img src="supersample4.png"><br>
+Sample rate 4 <em>basic/test4.svg</em>.</p>
+<p><img src="supersample16.png"><br>
+Sample rate 16 <em>basic/test4.svg</em>.</p>
+<p><img src="typical_edge.png"><br>
+Sample rate 9 rasterization of more typical triangle edge <em>basic/test4.svg</em>.</p>
+<h2 id="task-3">Task 3</h2>
+<p><img src="my_robot.png"><br>
+This is cubeman’s friendlier cousin. He waves while demonstrating nested rotational transforms with his smile!</p>
+<h2 id="task-4">Task 4</h2>
+<p>Barycentric coordinates enumerate locations within a triangle. Each vertex of the triangle is designated a full alpha, beta, or gamma value and each point inside the triangle has a value for each between 0 and 1. These 3 variables allow values at the vertices (for instance, colors) to be interpolated across the shape. The following example colors one vertex green, one red, and one blue. All other points are interpolated from those values.</p>
+<p><img src="rgb_triangle.png"></p>
+<em>RGB triangle</em></p>
+<p><img src="test7.png"><br>
+<em>basic/test7.svg</em></p>
+<h2 id="task-5">Task 5</h2>
+<p>Pixel sampling is the processing of taking pixel readings at various image locations. In the case of our texture mapping, it identifies the color values at each screen pixel for a texture image projected onto a triangle.</p>
+<p>Nearest sampling projects the desired screen coordinate into barycentric triangle coordinates and then into image space. This likely lands between pixels in discrete image space, so it selects the color of the nearest one. Bilinear sampling, on the other hand, combines the color values of the nearest set of 4 pixels via linear combination. The weights for this combination are higher for pixels closer to the projected coordinates.</p>
+<p><img src="nearest_1.png"></p>
+<p><em>/svg/texmap/test2.svg</em> with 1 nearest neighbor sample per pixel.</p>
+<p><img src="bilinear_1.png"></p>
+<p><em>/svg/texmap/test2.svg</em> with 1 bilinear sample per pixel.</p>
+<p><img src="nearest_16.png"></p>
+<p><em>/svg/texmap/test2.svg</em> with 16 nearest neighbor samples per pixel.</p>
+<p><img src="bilinear_16.png"></p>
+<p><em>/svg/texmap/test2.svg</em> with 16 bilinear samples per pixel.</p>
+<p>The 1 nearest neighbor sample per pixel approach produces significant aliasing on lines of latitude and terrible aliasing on lines of longitude. Bilinear sampling without supersampling improves the horizontal lines significantly and starts to clean up the vertical lines.</p>
+<p>Supersampling at 16 samples per pixel does the best job at anti-aliasing. At this point, there's very little difference between the two sampling techniques.</p>
+<h2 id="task-6">Task 6</h2>
+<p>Level sampling aims to take a more localized approach to antialiasing by adjusting the magnitude of blurring and downsampling based on the screen sampling rate when mapped to texture space. Each level represents a different magnitude of pre-computed low-pass and downsampling. The appropriate level for each screen sample is then chosen at runtime. We implemented a system to sample at the closest level (since the calculation for appropriate level is continuous and levels are discrete) or at a linear interpolation of the two nearest levels.</p>
+<p><img src="levels.png"></p>
+<p><em>/svg/texmap/test1.svg</em> with shading designating the mipmap level across the geometry.</p>
+<p>Each sampling technique has benefits and drawbacks. Supersampling produces very high quality results, but comes with significant memory and performance drawbacks. It essentially scales the computation and memory expenses by the supersample rate, which can become very costly at 9 or 16 samples per pixel.</p>
+<p>Bilinear sampling introduces extra computation compared to nearest pixel sampling, but it isn't nearly as severe as supersampling's overhead. It introduces a minor, global anti-aliasing effect that works well if compute is limited or can be combined with other anti aliasing techniques.</p>
+<p>Level sampling makes a lot of sense when there is geometry that heavily distorts texture-space to screen-space coordinate mapping. Without accounting for this, severe artifacts can cause aliasing and moire (in 3D, this often shows up at coordinates far from the camera). Furthermore, the different levels can be computed before runtime and the memory overhead is only about 30% more than not using this effect.</p>
+<p><img src="skis.png"></p>
+<p><em>Original image</em></p>
+<p><b>To demonstrate these techniques, </b> we used an image taken while on a ski lift <em>(copyright David McAllister)</em> and projected it onto the geometry specified in <em>/svg/texmap/test1.svg</em>.</p>
+<img src="l_zero_p_nearest.png"></p>
+<p><code>L_ZERO</code> and <code>P_NEAREST</code>, significant aliasing on ski's logo and 35mm film grain causes speckled appearance of ski.</p>
+<img src="l_zero_p_linear.png"></p>
+<p><code>L_ZERO</code> and <code>P_LINEAR</code>, aliasing on the logo is improved and speckling due to sampling noise is noticably reduced.</p>
+<img src="l_nearest_p_nearest.png"></p>
+<p><code>L_NEAREST</code> and <code>P_NEAREST</code>, there are significant jaggies just like <code>L_ZERO</code> and <code>P_NEAREST</code>, but the low pass filter during mipmap generation seems to have improved the sampling of the noisy white region.</p>
+<img src="l_nearest_p_linear.png"></p>
+<p><code>L_NEAREST</code> and <code>P_LINEAR</code>, the best result so far. Jaggies are minimized and the background color of the ski appears more uniform.</p>
+<img src="l_nearest_p_linear_zoom.png"></p>
+<p>A magnified view of <code>L_NEAREST</code> and <code>P_LINEAR</code>. This shows the difference between sharpness at the center and edges of the geometry. Notably, the image seems sharper in the center than on the edges.</p>
+<p><em>CSS styling provided by StackEdit Markdown to HTML.</em> <a href="https://stackedit.io"> stackedit.io</p>
+</div>
+</body>
+
 </html>
