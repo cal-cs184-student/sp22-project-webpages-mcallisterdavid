@@ -65,8 +65,8 @@
 </ul>
 <p>Originally, instead of modifying the whole rasterization pipeline, the supersampling was isolated to the triangle rasterization step, not allocating any additional memory and instead averaging a set of <code>sqrt(sample_rate)</code> by <code>sqrt(sample_rate)</code> pixels on-the-fly. This approach had very little overhead, but it introduced artifacts when rasterizing adjacent triangles. Each triangle was sampling its contents as well as the background color at its edges, rather than sampling the adjacent triangle.</p>
 <p><img src="ss_artifacts.png"><br>
-Sample rate 1 <em>basic/test4.svg</em>.</p>
-<p>Our supersampling algorithm spaces sample points evenly at the centers of evenly placed subpixels. It performs the three line point-in-triangle test at each of these locations and places the sampled colors in the sample buffer array. This sample buffer array has its resolution scaled from <code>width * height</code> to <code>sample_rate * width * height</code>.</p>
+Artifacts visualized. <em>basic/test4.svg</em>.</p>
+<p>We then settled on using an upscaled intermediate sample buffer. Our supersampling algorithm spaces sample points evenly within each screen pixel. It performs the three line point-in-triangle test at each of these locations and places the sampled colors in the sample buffer array. This sample buffer array has its resolution scaled from <code>width * height</code> to <code>sample_rate * width * height</code>.</p>
 <p>This upscaled sample buffer array is then resolved into the framebuffer by averaging each square of <code>sqrt(sample_rate)</code> by <code>sqrt(sample_rate)</code> pixels and outputting the resulting color. It also works with tile-based rendering we completed for task1 extra credit!</p>
 <p>Introducing supersampling into our rasterization system essentially implements an averaging blur on a higher resolution output. This reduces high spatial frequencies and reduces aliasing and the resulting “jaggies.” This effect is particularly pronounced on skinny triangle edges, where sampling error can cause the triangle to appear patchy.</p>
 <p><img src="supersample1.png"><br>
