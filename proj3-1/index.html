@@ -4,84 +4,151 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>184 Project 2</title>
+	<title>184 Project 3-1</title>
 	<link rel="stylesheet" href="style.css" />
 </head>
 
 <body class="stackedit">
-<div class="stackedit__html"><h1 id="cs-184-computer-graphics-and-imaging-spring-2022">Project 2: MeshEdit</h1>
-	<h3 id="project-2">CS 184: Computer Graphics and Imaging, Spring 2022</h3>
+<div class="stackedit__html"><h1 id="cs-184-computer-graphics-and-imaging-spring-2022">Project 3-1: Pathtracter 1</h1>
+	<h3 id="project-3-1">CS 184: Computer Graphics and Imaging, Spring 2022</h3>
 	<h3 id="david-mcallister-and-james-dai">David McAllister and James Dai</h3>
-	<h3 id="task-1">Task 1: Bezier Curves with 1D de Casteljau Subdivision</h3>
-	<p>At each step, the de Casteljau algorithm linearly interpolates N-1 points from N control points. This can be performed recursively to compute individual points along the curve that those points define. A parameter <em>t</em> controls how far along the curve between the control points we would like to evaluate. In this way, the curve becomes a function parametrized by <em>t</em>.</p>
-	<p><img src="bezier_curve/0.png"><br>
-		<em>../bzc/curve3.bzc</em> showing only the control points</p>
-	<p><img src="bezier_curve/1.png"><br>
-		<em>../bzc/curve3.bzc</em> showing one step evaluated</p>
-	<p><img src="bezier_curve/2.png"><br>
-		<em>../bzc/curve3.bzc</em> showing two steps evaluated</p>
-	<p><img src="bezier_curve/3.png"><br>
-		<em>../bzc/curve3.bzc</em> showing three steps evaluated</p>
-	<p><img src="bezier_curve/4.png"><br>
-		<em>../bzc/curve3.bzc</em> showing four steps evaluated</p>
-	<p><img src="bezier_curve/5.png"><br>
-		<em>../bzc/curve3.bzc</em> showing full evaluation down to a single point for the default t parameter</p>
-	<p><img src="bezier_curve/curve.png"><br>
-		<em>../bzc/curve3.bzc</em> showing full evaulation to a single point and the full curve in green</p>
-	<p><img src="bezier_curve/different.png"><br>
-		<em>../bzc/curve3.bzc</em> with control points and t parameter adjusted</p>
-	<h3 id="task-2">Task 2: Bezier Surfaces with Separable 1D de Casteljau</h3>
+	<h2 id="task-1">Part 1: Ray Generation and Scene Intersection</h2>
+	<p>Ray generation involves generating rays that originate at the sensor and pass through the sensor at various locations within each pixel. These locations are uniformly distributed across each pixel, allowing us to send more samples to better approximate the expected image.</p>
+	<p>Ray-triangle intersection has multiple parts. The first is to calculate the time <em>t</em> of intersection. This, however, does not always tell us if it actually intersects the geometry, so we need to calculate the barycentric coordinates of the hit point. If any of these are less than 0, we know there is no intersection. If they are all above zero and sum to one, there is an intersection and we can use these coordinates to interpolate a normal shading.</p>
+	<p>Ray-sphere intersection is quite a bit simpler. We get two intersection times, which specify the entry and exit times. If the ray is perfectly tangent to the sphere, we would only get a single intersection time. These values allow us to determine if the intersection was valid.</p>
+	<p>Regardless of the intersection type, we only want to intersect the nearest geometry, so we update the ray's <em>max_t</em> and only observe intersections with lower, still positive <em>t</em> values.</p>
+	<p><img src="part1/CBspheres.png"><br>
+		<em>CBspheres_lambertian</em> with normal shading and no BVH acceleration.</p>
+	<p><img src="part1/teapot.png"><br>
+		<em>teapot.dae</em> with normal shading and no BVH acceleration.</p>
+	<p><img src="part1/cow.png"><br>
+		<em>cow.dae</em> with normal shading and no BVH acceleration.</p>
+	<h2 id="task-2">Part 2: Bounding Volume Hierarchy</h2>
 	<ul>
 	</ul>
-	<p>de Casteljau's algorithm extends to 3D by switching from <em>n</em> control points to <em>n</em> sets of <em>n</em> control points. Each row of these points is evaluated as in the 2D curve case with parameter <em>u</em>. This produces a single set of control points that can then be evaluated with the same process and a parameter <em>v</em>. Thus, the control points fully define a 3D curve that can be evaluated along its surface by adjusting the <em>u</em> and <em>v</em> parameters.</p>
-	<p><img src="bezier_surface/teapot.png"><br>
-		<em>bez/teapot.bez</em> teapot Bezier surface.</p>
-	<h2 id="task-3">Task 3: Area-Weighted Vertex Normals</h2>
-	<p>We implemented the area-weighted vertex normals by iterating all the adjacent faces around a given vertex and summing their normals. This is then normalized by dividing by the vertex's degree. Interpolating these normals across the surface produces <em>by-pixel</em> shading.</p>
-	<p><img src="phong_shading/flat.png"></p>
-	<em>Flat shading</em></p>
-	<p><img src="phong_shading/phong.png"><br>
-		<em>Phong shading</em></p>
-	<h2 id="task-4">Task 4: Edge Flip</h2>
-	<p>We implemented edge flips by carefully diagramming a set of two triangles with a shared edge before and after the flip. This was the hardest section in terms of debugging. There were multiple mesh elements that we didn't think to update. For example, we neglected to update the faces' halfedge pointers. We also made the mistake of interpreting a halfedge's vertex as the vertex it points to rather than the vertex it originates from. This caused errors across the geometry that were hard to debug and that we didn't fully fix until they were causing problems in loop subdivision.</p>
-	<p><img src="edge_flip/before.png"></p>
-	<em>Edge flip (Before)</em></p>
-	<p><img src="edge_flip/after.png"></p>
-	<em>Edge flip (After)</em></p>
-	<p><img src="loop_subdivision/debug4.png"></p>
-	<em>../dae/cube/input.dae</em> subdivided a few iterations, showing position mis-assignments caused by edge flip vertex pointer bugs.</p>
-	<h2 id="task-5">Task 5: Edge Split</h2>
-	<p>We implemented edge splitting in a very similar way to edge flipping. We actually copied all the code that isolates each mesh element (faces, vertices, half-edges, etc) and then expanded on it. We constructed three new edges, marked two as <em>isNew</em>, and constructed a new vertex. The code actually ran first try! The only thing we were missing was assigning the vertex's position, which we did by averaging the two edge-adjacent vertices' positions.</p>
-	<p>Nearest sampling projects the desired screen coordinate into barycentric triangle coordinates and then into image space. This likely lands between pixels in discrete image space, so it selects the color of the nearest one. Bilinear sampling, on the other hand, combines the color values of the nearest set of 4 pixels via linear combination. The weights for this combination are higher for pixels closer to the projected coordinates.</p>
-	<p><img src="edge_split/before.png"></p>
-	<em>Edge split (Before)</em></p>
-	<p><img src="edge_split/just_splits.png"></p>
-	<em>Edge split (After)</em></p>
-	<p><img src="edge_split/after.png"></p>
-	<em>Edge split/flip (After)</em></p>
+	<p>For the BVH algorithm, we first found the centroid of the expanded bounding box that covers all the primitives. We then utilized this point to calculate how many primitives would be on the left and right of the x, y, and z axes respectively. This heuristic allowed us to essentially calculate which axis would allow us to get the best split of the primitives by calculating the minimum of the absolute value of the # of primitives on the left of a given axis minus the # of primitives on the right of a given axis. Utilizing this new split, we created two vectors and appended all the primitives that are on the left and right of the split line to their corresponding vectors. Finally, we used these vectors to partition the original primitives vector, shuffling it so the left primitives are on the left side and the right primitives are on the right. We then recurse with the pointers corresponding to the start and end of the left primitives and the pointers corresponding to the start and end of the right primitives. When the size of the split is less than max_leaf_size, we can terminate the recursion.</p>
 
-	<h2 id="task-6">Task 6: Loop Subdivision for Mesh Upsampling</h2>
-	<p>We implemented loop subdivision using the process recommended on the spec. We first calculated the future positions of all current vertices then did the same for future vertices by iterating through all current edges. We then perform 4-1 subdivision, marking the two edges that were not contained in the split edge as new. We did a check on every edge to see if the <em>isNew</em> values of the two adjacent vertices were different. If so, we flipped the edge. At this point, we just had to set the positions of all the vertices from our prior computation and reset the <em>isNew</em> flags.</p>
-	<p><img src="loop_subdivision/debug1.png"></p>
-	<p><em>../dae/torus/input.dae</em> showing mesh output during debugging process.</p>
-	<p>We didn't run into too arduous of a debugging process. As shown above, we were experiencing mispositioning on several vertices after subdividing different input geometry. This ended up being the result of misassigned pointers for vertices' half-edge struct members. After many subdivisions, this produced some really interesting geometry.</p>
-    <p><img src="loop_subdivision/debug2.png"></p>
-    <p><em>../dae/cube/input.dae</em> during debugging process after performing many subdivisions.</p>
-	<p>Certain meshes behave better than others in response to loop subdivision. The torus input geometry subdivides very nicely into a nice ring geometry.</p>
-    <p><img src="loop_subdivision/torus_hd.png"></p>
-    <p><em>../dae/torus/input.dae</em> showing smooth mesh output after several subdivisions.</p>
-	<p>Input geometry with sharp edges and corners seems to perform worse, with those sharp elements causing asymmetry and strange geometric output.</p>
-    <p><img src="loop_subdivision/cube.png"></p>
-    <p><em>../dae/cube/input.dae</em> showing cube before subdivisions.</p>
-    <p><img src="loop_subdivision/cube_upres1.png"></p>
-    <p><em>../dae/cube/input.dae</em> showing cube after 1 subdivision.</p>
-    <p><img src="loop_subdivision/cube_upres2.png"></p>
-    <p><em>../dae/cube/input.dae</em> showing cube after several subdivisions.</p>
-    <p>The cube's subdivisions demonstrate the asymmetry resulting from subdividing sharp edges and corners. We can improve this by preprocessing a bit. Starting from the input cube, we split every edge that lies flat diagonally across a face of the cube. This leads to symmetry in the initial edge placement and therefore symmetry in the final subdivided geometry.</p>
-    <p><img src="loop_subdivision/preprocessed.png"></p>
-    <p><em>../dae/cube/input.dae</em> showing the preprocessed cube.</p>
-    <p><img src="loop_subdivision/preprocessed_upres.png"></p>
-    <p><em>../dae/cube/input.dae</em> showing the preprocessed cube after several subdivisions.</p>
+	<p><b>BVH-accelerated and non-accelerated normal shading render times for various input files:</b></p>
+
+	<table>
+	<thead>
+	<tr>
+	<th>File</th>
+	<th>Non-BVH (s)</th>
+	<th>BVH (s)</th>
+	</tr>
+	</thead>
+	<tbody>
+	<tr>
+	<td>sky/CBspheres_lambertian.dae</td>
+	<td>0.1426</td>
+	<td>0.0995</td>
+	</tr>
+	<tr>
+	<td>meshedit/cow.dae</td>
+	<td>42.8786</td>
+	<td>0.0778</td>
+	</tr>
+	<tr>
+	<td>meshedit/teapot.dae</td>
+	<td>17.7097</td>
+	<td>0.1699</td>
+	</tr>
+	</tbody>
+	</table>
+
+	<br />
+	<p><b>Normal-shaded renders of complex geometry that would be infeasible without BVH-acceleration:</b></p>
+
+	<p><img src="bvh/bvh_dragon.png"><br>
+		<em>dragon.dae</em> rendered with normal shading.</p>
+	<p><img src="bvh/bvh_blob.png"><br>
+		<em>blob.dae</em> rendered with normal shading.</p>
+	<p><img src="bvh/angel_close.png"><br>
+		<em>CBlucy.dae</em> rendered with normal shading and adjusted perspective.</p>
+
+	<h2 id="task-3">Part 3: Direct Illumination</h2>
+	<p>For the <em>estimate_direct_lighting_hemisphere</em> function, we uniformly sampled a ray from the CosineWeightedHemisphere. Since the hemisphere sampler is in object space, we transform it into world space and use our BVH data structure to see if the world vector intersects with any primitives in <em>log(n)</em> time. If it does, we sample the BSDF function with w_out and our sampled w_in (all from object space) to see how much light is reflected towards w_out (i.e. the camera in the case of a primary ray). We normalize by the PDF of selecting this direction (in this case a factor of pi since it is uniform) and the BSDF function. Finally, we aggregate this into a total light and average it out.</p>
+
+	<p>The <em>estimate_direct_lighting_importance</em> function is fairly similar but now utilizes the locations of the lights more directly. We loop over all the lights in our scene and sample the light radiance that will hit our hit point using the <em>sample_L</em> function. We do this a number of times per light specified by the <em>-l</em> parameter. We then similarly calculate the reflection from the hemisphere function above to aggregate the light. Importance lighting allows us to also sample point lights, which don't work with hemisphere sampling since the likelihood of a random ray intersecting it is zero.</p>
+		
+	<p><b>Direct illumination hemisphere vs. importance comparison:</b></p>
+	<p><img src="direct_vs_hemisphere_s8_l16/bunny_hemi.png"><br>
+		<em>bunny.dae</em> rendered with 8 samples per pixel and 16 hemisphere samples per light.</p>
+	<p><img src="direct_vs_hemisphere_s8_l16/bunny_direct.png"><br>
+		<em>bunny.dae</em> rendered with 8 samples per pixel and 16 importance samples per light.</p>
+
+	<p><b>Soft shadow comparison with more importance samples per light.</b></p>
+	<p><img src="direct_illum_l_levels/bunny_l1.png"><br>
+		<em>bunny.dae</em> rendered with 1 sample per pixel and 1 sample per light.</p>
+	<p><img src="direct_illum_l_levels/bunny_l4.png"><br>
+		<em>bunny.dae</em> rendered with 1 sample per pixel and 4 sample per light.</p>
+	<p><img src="direct_illum_l_levels/bunny_l16.png"><br>
+		<em>bunny.dae</em> rendered with 1 sample per pixel and 16 sample per light.</p>
+	<p><img src="direct_illum_l_levels/bunny_l64.png"><br>
+		<em>bunny.dae</em> rendered with 1 sample per pixel and 64 sample per light.</p>
+	<p>As shown in the images, increasing the samples per light dramatically reduces noise in the soft shadows under the bunny. It also lower noise in non-shadow areas, but less noticeably.</p>
+
+	<p>Importance sampling way outperforms hemisphere sampling. While hemisphere sampling hopes to intersect all light sources enough times to render acceptable shadows, importance sampling only intersects light sources and geometry directly blocking light sources. This greatly reduces noise in shadows as well as directly illuminated sections of the image. While both will converge to the expected image with enough samples, importance sampling will get there much more quickly. In this way, it makes low-noise pathtracing computationally tractable.</p>
+
+	<h2 id="task-4">Part 4: Global Illumination</h2>
+	<p>Our implementation of the indirect lighting function wraps around our implementation of the direct lighting function. It casts rays which intersect geometry and compute the "one-bounce" or direct lighting at that intersection. Instead of stopping there, we uniformly sample a unit hemisphere and send out another ray to do the same. This ray's returned illumination is then normalized by its angle of incidence, probability of being cast in that direction, and intersection's reflective properties. This recursive ray generation can be terminated in two ways. First, we specify a <em>max ray depth</em> at which rays stop being generated. Second, we introduce a termination probability of 0.3 at each bounce, implementing russian roulette. This introduces an additional normalization factor and returns our estimation to being unbiased.</p>
+
+	<p><b>Direct vs. global illumination:</b></p>
+	<p><img src="part4-1/direct_1024.png"><br>
+		<em>CBspheres_lambertian.dae</em> rendered with 1024 samples per pixel and only direct illumination.</p>
+	<p><img src="part4-1/global_1024.png"><br>
+		<em>CBspheres_lambertian.dae</em> rendered with 1024 samples per pixel and both direct and indirect illumination.</p>
+
+	<br />
+	<p><b>Only direct vs. only indirect illumination:</b></p>
+	<p><img src="part4-only_direct_and_only_indirect/only_direct.png"><br>
+		<em>CBspheres_lambertian.dae</em> rendered with 1024 samples per pixel and only direct illumination.</p>
+	<p><img src="part4-only_direct_and_only_indirect/only_indirect.png"><br>
+		<em>CBspheres_lambertian.dae</em> rendered with 1024 samples per pixel and only indirect illumination.</p>
+	<br />
+	<p><b>Max ray depth comparison (-m):</b></p>
+
+	<p><img src="mcomparison/bunny0.png"><br>
+		<em>bunny.dae</em> rendered with 1024 samples per pixel and a max ray depth of 0 (zero-bounce).</p>
+	<p><img src="mcomparison/bunny1.png"><br>
+		<em>bunny.dae</em> rendered with 1024 samples per pixel and a max ray depth of 1 (direct lighting).</p>
+	<p><img src="mcomparison/bunny2.png"><br>
+		<em>bunny.dae</em> rendered with 1024 samples per pixel and a max ray depth of 2.</p>
+	<p><img src="mcomparison/bunny3.png"><br>
+		<em>bunny.dae</em> rendered with 1024 samples per pixel and a max ray depth of 3.</p>
+	<p><img src="mcomparison/bunny100.png"><br>
+		<em>bunny.dae</em> rendered with 1024 samples per pixel and a max ray depth of 100.</p>
+
+	<br />
+	<p><b>Pixel sample rate comparison (-s):</b></p>
+	<p><img src="part4-s_comparison/s1.png"><br>
+		<em>CBspheres_lambertian.dae</em> rendered with 1 sample per pixel.</p>
+	<p><img src="part4-s_comparison/s2.png"><br>
+		<em>CBspheres_lambertian.dae</em> rendered with 2 samples per pixel.</p>
+	<p><img src="part4-s_comparison/s4.png"><br>
+		<em>CBspheres_lambertian.dae</em> rendered with 4 samples per pixel.</p>
+	<p><img src="part4-s_comparison/s8.png"><br>
+		<em>CBspheres_lambertian.dae</em> rendered with 8 samples per pixel.</p>
+	<p><img src="part4-s_comparison/s16.png"><br>
+		<em>CBspheres_lambertian.dae</em> rendered with 16 samples per pixel.</p>
+	<p><img src="part4-s_comparison/s64.png"><br>
+		<em>CBspheres_lambertian.dae</em> rendered with 64 samples per pixel.</p>
+	<p><img src="part4-s_comparison/s1024.png"><br>
+		<em>bunny.dae</em> rendered with 1024 samples per pixel.</p>
+
+
+	<h2 id="task-5">Part 5: Adaptive Sampling</h2>
+	<p>We created two variables s1 and s2, which essentially aggregates the illuminance and illuminance squared respectively. We then calculate the mean and variance by simply following the formulas from the spec. We then calculate the interval and ensure it is less than our max_tolerance * mean. If it is, then we are 95% confident that the pixel lighting has converged. Therefore, we can break out of our loop early. This allows more computational resources to be applied to parts of the image that are the most difficult to compute.</p>
+	<p><b>Adaptive sampling rate over image:</b></p>
+	<p><img src="part5/part5-try3.png"><br>
+		<em>CBspheres_lambertian.dae</em> rendered with a maximum of 2048 samples per pixel, 1 sample per light, and 5 samples per light.</p>
+	<p><img src="part5/part5-try3_rate.png"><br>
+		Visualization of adaptive sample rate across the image, with red representing higher rates and blue representing lower rates.</p>
+
+	<h2 id="task-6">Extra: WALL-E</h2>
+	<p>We rendered Wall-E in 1080p.</p>
+	<p><img src="walle/wall-e_hd.png"></p>
 	<p><em>CSS styling provided by StackEdit Markdown to HTML.</em> <a href="https://stackedit.io"> stackedit.io</p>
 </div>
 </body>
