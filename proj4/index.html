@@ -1,7 +1,172 @@
+<!DOCTYPE html>
 <html>
-	<head>
-	</head>
-	<body>
-		Project 4 here
-	</body>
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>184 Project 3-1</title>
+	<link rel="stylesheet" href="style.css" />
+</head>
+
+<body class="stackedit">
+<div class="stackedit__html"><h1 id="cs-184-computer-graphics-and-imaging-spring-2022">Project 4: Cloth Simulation</h1>
+	<h3 id="project-3-1">CS 184: Computer Graphics and Imaging, Spring 2022</h3>
+	<h3 id="david-mcallister-and-james-dai">David McAllister and James Dai</h3>
+	<h2 id="task-1">Part 1: Masses and Springs</h2>
+	<p>We implemented the grid of masses and springs as shown below.</p>
+	<p><img src="part1/noshearing.png"><br>
+		<em>scene/pinned2.json</em> without any shearing constraints.</p>
+	<p><img src="part1/onlyshearing.png"><br>
+        <em>scene/pinned2.json</em> with only shearing constraints.</p>
+    <p><img src="part1/all.png"><br>
+        <em>scene/pinned2.json</em> with all constraints included.</p>
+
+	<h2 id="task-2">Part 2: Simulation via Numerical Integration</h2>
+
+	<p>We implemented cloth simulation so that the grid of masses and springs can realistically drape from pinned corners.</p>
+
+	<p><img src="part2/pinned4.png"><br>
+		<em>scene/pinned4.json</em> with default parameters in its final resting state.</p>
+
+    <p>We also tuned the parameter values to investigate how it would affect the simulation.</p>
+
+    <p><b>ks value:</b></p>
+
+	<p><img src="part2/lowks.png"><br>
+        <em>scene/pinned4.json</em> with low ks value. A lower spring constant leads to less force to counteract gravity and a deeper droop.</p>
+	<p><img src="part2/highks.png"><br>
+        <em>scene/pinned4.json</em> with high ks value. This has the opposite effect, leading to very little droop.</p>
+
+    <p><b>Density value:</b></p>
+
+    <p><img src="part2/highdensity.png"><br>
+        <em>scene/pinned4.json</em> with very high density. This also leads to significant droop, but the ripples in the fabric are much tighter.</p>
+
+    <p><img src="part2/lowdensity.png"><br>
+        <em>scene/pinned4.json</em> with very low density. This has a nearly identical effect to a very high spring constant.</p>
+
+    <p><b>Damping value:</b></p>
+
+    <p><img src="part2/highdamping.png"><br>
+        <em>scene/pinned4.json</em> with very high damping. This leads to the cloth falling very slowly into its final resting state.</p>
+
+    <p><img src="part2/nodamping.png"><br>
+        <em>scene/pinned4.json</em> with very no damping. The fabric doesn't lose energy with these parameters, so it swings high on the other side and has pronounced ripples.</p>
+
+
+    <h2 id="task-2">Part 3: Handling Collisions with Other Objects</h2>
+
+    <p>We first implemented collisions with spheres, which was pretty straightforward.</p>
+
+    <p><img src="part3/ks5000.png"><br>
+        <em>scene/sphere.json</em> with default ks spring constant of 5000.</p>
+
+    <p><img src="part3/ks500.png"><br>
+        <em>scene/sphere.json</em> with one tenth the spring constant, the cloth is much less rigid with more, smaller ridges.</p>
+
+    <p><img src="part3/ks50000.png"><br>
+        <em>scene/sphere.json</em> with a spring constantof 50,000, the cloth is very ridgid and doesn't wrap much around the sphere.</p>
+
+    <p><b>Next,</b> we implemented plane collision. It took a while to debug it such that the cloth didn't clip the surface or slide after collision due to inconsistencies with the correction vectors. Our final solution doesn't have these problems.</p>
+
+    <p><img src="part3/plane.png"><br>
+        <em>scene/plane.json</em> with cloth resting on the plane.</p>
+
+
+    <h2 id="task-2">Part 4: Self-Collisions</h2>
+
+    <p>After implementing hash-based self collisions, the cloth falls as follows with default values.</p>
+
+    <p><img src="self_collision/1.png"><br>
+        <em>scene/selfCollision.json</em> upon first contact.</p>
+
+    <p><img src="self_collision/2.png"><br>
+        <em>scene/selfCollision.json</em> halfway through falling.</p>
+
+    <p><img src="self_collision/3.png"><br>
+        <em>scene/selfCollision.json</em> after many time steps.</p>
+
+    <p><b>Value tuning:</b></p>
+
+    <p><img src="self_collision/highks.png"><br>
+        <em>scene/selfCollision.json</em> with high spring constant ks. This leads to large, wide ripples just like when draping from pinned points or the sphere.</p>
+
+    <p><img src="self_collision/lowks.png"><br>
+        <em>scene/selfCollision.json</em> with low spring constant ks. This has the opposite effect, with lots of small ripples.</p>
+
+    <p><img src="self_collision/high_density.png"><br>
+        <em>scene/selfCollision.json</em> with high density. This leads to an irregular resting pattern on the plane.</p>
+
+    <p><img src="self_collision/low_density.png"><br>
+        <em>scene/selfCollision.json</em> with low density. This leads to very few bends in the final resting pattern.</p>
+
+    <h2 id="task-2">Part 5: Shaders</h2>
+
+    <p>Shader programs determine the brightness and color of a pixel based on the underlying geometry, lights, and cameras in a scene. Vertex shaders can update vertices and set variables that fragment shaders use. Fragment shaders then figure out the color values for each pixel based on the vertex shaders' outputs.</p>
+
+    <p>The Blinn-Phong shading model superimposes an ambient, specular, and diffuse shading to produce a more realistic effect than standard diffuse shaders without too high of a computational requirement. For example, it approximates specular highlights from reflected lights, while diffuse shading does not.</p>
+
+    <p><img src="phong/diffuse.png"><br>
+        <em>scene/sphere.json</em> with Blinn-Phong diffuse shading enabled.</p>
+
+    <p><img src="phong/ambient.png"><br>
+        <em>scene/sphere.json</em> with Blinn-Phong ambient shading enabled.</p>
+
+    <p><img src="phong/specular.png"><br>
+        <em>scene/sphere.json</em> with Blinn-Phong specular shading enabled.</p>
+
+    <p><img src="phong/full.png"><br>
+        <em>scene/sphere.json</em> with full Blinn-Phong shading enabled.</p>
+
+    <p><b>Texture mapping shader:</b></p>
+
+    <p><img src="texture/pre.png"><br>
+        <em>scene/sphere.json</em> with picture of my friend, Adel, as the texture.</p>
+
+    <p><img src="texture/post.png"><br>
+        <em>scene/sphere.json</em> after draping over the sphere.</p>
+
+    <p>We used texture 4 to demonstrate our bump and displacement mapping shaders. Our height function outputted the euclidean length of the color vector</p>
+
+    <p><b>Bump mapping shader:</b></p>
+
+    <p><img src="bump/bump_16_cloth.png"><br>
+        <em>scene/sphere.json</em> cloth with bump mapping and vertical/horizontal resolution of 16.</p>
+
+    <p><img src="bump/bump_16_sphere.png"><br>
+        <em>scene/sphere.json</em> sphere with bump mapping and vertical/horizontal resolution of 16.</p>
+
+    <p><img src="bump/bump_128_cloth.png"><br>
+        <em>scene/sphere.json</em> cloth with bump mapping and vertical/horizontal resolution of 129.</p>
+
+    <p><img src="bump/bump_128_sphere.png"><br>
+        <em>scene/sphere.json</em> sphere with bump mapping and vertical/horizontal resolution of 128.</p>
+
+    <p>Increasing the sphere's resolution did not noticeably affect the quality of the results since bump mapping does not modify the underlying geometry!</p>
+
+    <p><b>Displacement mapping shader:</b></p>
+
+    <p><img src="displacement/displacement_16.png"><br>
+        <em>scene/sphere.json</em> cloth with displacement mapping and vertical/horizontal resolution of 16.</p>
+
+    <p><img src="displacement/displacement_128.png"><br>
+        <em>scene/sphere.json</em> cloth with displacement mapping and vertical/horizontal resolution of 128.</p>
+
+    <p>Increasing the sphere's resolution had a dramatic effect on the quality of the shader, since higher-frequency displacement detail can be displayed.</p>
+
+    <p>From a distance and with additional detail of a low enough variance, it's hard to tell the difference between bump and displacement mapping. It mostly shows up on the edges of the rendered geometry, such as with the brick bumps on the side of the sphere. Displacement mapping comes at a higher price in terms of needed geometry resolution and computation time, though.</p>
+
+    <p><b>Mirror shader:</b></p>
+
+    <p><img src="mirror/drape.png"><br>
+        <em>scene/sphere.json</em> cloth draped over sphere with mirror shader.</p>
+
+    <p><img src="mirror/sphere.png"><br>
+        <em>scene/sphere.json</em> sphere with mirror shader.</p>
+
+	
+	<p><em>CSS styling provided by StackEdit Markdown to HTML.</em> <a href="https://stackedit.io"> stackedit.io</p>
+</div>
+</body>
+
 </html>
